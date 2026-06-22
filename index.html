@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self';
+             script-src 'self' https://cdn.jsdelivr.net;
+             style-src 'self' 'unsafe-inline';
+             img-src 'self' data: blob:;
+             connect-src 'self';
+             base-uri 'self';
+             form-action 'self';
+             object-src 'none';
+             frame-ancestors 'none'" />
+  <title>LoanLens — Home Loan Repayment &amp; Prepayment Calculator</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🏠</span>
+      <div>
+        <h1>LoanLens</h1>
+        <p class="tag">Home-loan EMI, amortization &amp; every prepayment strategy — with charts.</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <div class="currency-pick">
+        <label for="currency">Currency</label>
+        <select id="currency">
+          <option value="₹" data-locale="en-IN">₹ INR</option>
+          <option value="$" data-locale="en-US">$ USD</option>
+          <option value="£" data-locale="en-GB">£ GBP</option>
+          <option value="€" data-locale="de-DE">€ EUR</option>
+          <option value="" data-locale="en-US">No symbol</option>
+        </select>
+      </div>
+      <button type="button" id="saveBtn" class="share-btn" title="Download this scenario as a file">💾 Save file</button>
+      <button type="button" id="loadBtn" class="share-btn ghost" title="Load a previously saved scenario file">📂 Load file</button>
+      <input type="file" id="loadFile" accept="application/json,.json" hidden />
+    </div>
+  </header>
+
+  <main class="layout">
+    <!-- ============ INPUT PANEL ============ -->
+    <section class="panel inputs" aria-label="Loan inputs">
+      <h2>Loan details</h2>
+
+      <div class="field">
+        <label for="principal">Loan amount</label>
+        <div class="input-wrap"><span class="prefix" data-cur>₹</span>
+          <input type="number" id="principal" min="0" step="10000" placeholder="e.g. 5000000" />
+        </div>
+        <input type="range" id="principal_r" min="100000" max="30000000" step="50000" value="100000" />
+      </div>
+
+      <div class="field">
+        <label for="rate">Interest rate <span class="muted">(% per year)</span></label>
+        <div class="input-wrap">
+          <input type="number" id="rate" min="0" max="30" step="0.05" placeholder="e.g. 8.5" />
+          <span class="suffix">%</span>
+        </div>
+        <input type="range" id="rate_r" min="1" max="20" step="0.05" value="1" />
+      </div>
+
+      <div class="field">
+        <label for="tenure">Tenure <span class="muted">(years)</span></label>
+        <div class="input-wrap">
+          <input type="number" id="tenure" min="1" max="40" step="1" placeholder="e.g. 20" />
+          <span class="suffix">yr</span>
+        </div>
+        <input type="range" id="tenure_r" min="1" max="40" step="1" value="1" />
+      </div>
+
+      <div class="field">
+        <label for="startDate">First EMI month</label>
+        <input type="month" id="startDate" />
+      </div>
+
+      <div class="field">
+        <label for="customEmi">Fixed / custom EMI <span class="muted">(optional)</span></label>
+        <div class="input-wrap"><span class="prefix" data-cur>₹</span>
+          <input type="number" id="customEmi" min="0" step="100" placeholder="auto from loan amount" />
+        </div>
+        <div class="sub">
+          <label class="inline" for="sanctioned">or fix EMI on sanctioned&nbsp;amt</label>
+          <div class="input-wrap" style="flex:1"><span class="prefix" data-cur>₹</span>
+            <input type="number" id="sanctioned" min="0" step="10000" placeholder="e.g. 6450000" />
+          </div>
+        </div>
+        <p class="hint tiny">Drew less than sanctioned but EMI was fixed on the
+          full amount? Put the loan amount as what you <em>used</em>, and the
+          sanctioned amount here — the higher EMI then acts like an automatic prepayment.</p>
+      </div>
+
+      <hr />
+
+      <h2>Prepayment options</h2>
+      <p class="hint">Add any combination below. The calculator compares your loan
+        <em>with</em> these prepayments against the original loan.</p>
+
+      <div class="field">
+        <span class="seg-label">When you prepay, you want to…</span>
+        <div class="segmented" role="radiogroup" aria-label="Prepayment strategy">
+          <label class="seg active">
+            <input type="radio" name="strategy" value="tenure" checked />
+            Reduce tenure <small>(keep EMI, finish sooner)</small>
+          </label>
+          <label class="seg">
+            <input type="radio" name="strategy" value="emi" />
+            Reduce EMI <small>(keep tenure, lower payment)</small>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="extraMonthly">Extra every month</label>
+        <div class="input-wrap"><span class="prefix" data-cur>₹</span>
+          <input type="number" id="extraMonthly" min="0" step="1000" value="0" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="extraYearly">Extra once a year</label>
+        <div class="input-wrap"><span class="prefix" data-cur>₹</span>
+          <input type="number" id="extraYearly" min="0" step="1000" value="0" />
+        </div>
+        <div class="sub">
+          <label for="yearlyMonth" class="inline">in month</label>
+          <select id="yearlyMonth">
+            <option value="1">Jan</option><option value="2">Feb</option>
+            <option value="3">Mar</option><option value="4">Apr</option>
+            <option value="5">May</option><option value="6">Jun</option>
+            <option value="7">Jul</option><option value="8">Aug</option>
+            <option value="9">Sep</option><option value="10">Oct</option>
+            <option value="11">Nov</option><option value="12">Dec</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="stepup">Step-up EMI each year <span class="muted">(% increase)</span></label>
+        <div class="input-wrap">
+          <input type="number" id="stepup" min="0" max="50" step="1" value="0" />
+          <span class="suffix">%</span>
+        </div>
+        <p class="hint tiny">e.g. 5% raises your EMI by 5% every 12 months — great as income grows.</p>
+      </div>
+
+      <div class="field">
+        <div class="lump-head">
+          <label>One-time lump-sum prepayments</label>
+          <button type="button" id="addLump" class="btn-mini">+ Add</button>
+        </div>
+        <div id="lumpList" class="lump-list"></div>
+      </div>
+
+      <hr />
+
+      <h2>Interest-rate revisions</h2>
+      <p class="hint">For floating / repo-linked loans whose rate changes over time.
+        Enter the new rate and the month it took effect — the rate above is your
+        <em>starting</em> rate.</p>
+
+      <div class="field">
+        <span class="seg-label">When the rate changes, the lender…</span>
+        <div class="segmented" role="radiogroup" aria-label="Rate revision behavior">
+          <label class="seg active">
+            <input type="radio" name="rateBehavior" value="tenure" checked />
+            Keeps EMI <small>(tenure changes)</small>
+          </label>
+          <label class="seg">
+            <input type="radio" name="rateBehavior" value="emi" />
+            Resets EMI <small>(tenure stays)</small>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="lump-head">
+          <label>Rate changes</label>
+          <button type="button" id="addRate" class="btn-mini">+ Add</button>
+        </div>
+        <div id="rateList" class="lump-list"></div>
+      </div>
+
+      <button type="button" id="reset" class="btn-ghost">Reset all</button>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section class="results">
+      <div class="cards">
+        <div class="card primary">
+          <span class="card-label">Your EMI</span>
+          <span class="card-value" id="kpiEmi">—</span>
+          <span class="card-sub" id="kpiEmiSub"></span>
+        </div>
+        <div class="card good">
+          <span class="card-label">Interest saved</span>
+          <span class="card-value" id="kpiInterestSaved">—</span>
+          <span class="card-sub" id="kpiInterestSavedPct"></span>
+        </div>
+        <div class="card good">
+          <span class="card-label">Time saved</span>
+          <span class="card-value" id="kpiTimeSaved">—</span>
+          <span class="card-sub" id="kpiNewTenure"></span>
+        </div>
+        <div class="card">
+          <span class="card-label">Total prepaid</span>
+          <span class="card-value" id="kpiPrepaid">—</span>
+          <span class="card-sub" id="kpiNewEmi"></span>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="sum-col">
+          <h3>Original loan</h3>
+          <ul>
+            <li><span>Principal</span><b id="sOrigPrincipal">—</b></li>
+            <li><span>Total interest</span><b id="sOrigInterest">—</b></li>
+            <li><span>Total payment</span><b id="sOrigTotal">—</b></li>
+            <li><span>Tenure</span><b id="sOrigTenure">—</b></li>
+          </ul>
+        </div>
+        <div class="sum-col with">
+          <h3>With prepayments</h3>
+          <ul>
+            <li><span>Principal</span><b id="sNewPrincipal">—</b></li>
+            <li><span>Total interest</span><b id="sNewInterest">—</b></li>
+            <li><span>Total payment</span><b id="sNewTotal">—</b></li>
+            <li><span>Tenure</span><b id="sNewTenure">—</b></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="chart-grid">
+        <div class="panel chart-box">
+          <div class="chart-head">
+            <h3>Outstanding balance over time</h3>
+            <span class="legend-note">Original vs with prepayments</span>
+          </div>
+          <canvas id="balanceChart"></canvas>
+        </div>
+
+        <div class="panel chart-box">
+          <div class="chart-head"><h3>Interest vs principal saved</h3></div>
+          <canvas id="compareChart"></canvas>
+        </div>
+
+        <div class="panel chart-box">
+          <div class="chart-head">
+            <h3>EMI over time</h3>
+            <span class="legend-note">Shows step-up &amp; reduce-EMI effects</span>
+          </div>
+          <canvas id="emiChart"></canvas>
+        </div>
+
+        <div class="panel chart-box">
+          <div class="chart-head"><h3>Yearly principal vs interest paid</h3></div>
+          <canvas id="splitChart"></canvas>
+        </div>
+      </div>
+
+      <div class="panel table-box">
+        <div class="chart-head">
+          <h3>Amortization schedule (with prepayments)</h3>
+          <div class="table-toggle">
+            <label><input type="checkbox" id="yearlyView" checked /> Yearly summary</label>
+            <button type="button" id="exportCsv" class="btn-mini">Export CSV</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table id="amortTable">
+            <thead></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>All calculations run locally in your browser. Interest accrues on a
+      <strong>daily reducing-balance</strong> basis (actual days per month ÷ 365), so a
+      28-day February costs less than a 31-day March on the same balance. EMI uses the
+      standard monthly formula; figures are estimates — confirm exact terms with your lender.</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
