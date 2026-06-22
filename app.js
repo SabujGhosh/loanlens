@@ -573,9 +573,31 @@ function exportCsv() {
 }
 
 /* ---------- main recompute ---------- */
+// blank every result back to placeholders (used when inputs are incomplete/invalid)
+function resetResults() {
+  ["kpiEmi", "kpiInterestSaved", "kpiTimeSaved", "kpiPrepaid",
+   "sOrigPrincipal", "sOrigInterest", "sOrigTotal", "sOrigTenure",
+   "sNewPrincipal", "sNewInterest", "sNewTotal", "sNewTenure"].forEach((id) => {
+    const el = document.getElementById(id); if (el) el.textContent = "—";
+  });
+  ["kpiEmiSub", "kpiInterestSavedPct", "kpiNewTenure", "kpiNewEmi"].forEach((id) => {
+    const el = document.getElementById(id); if (el) el.textContent = "";
+  });
+}
+
 function recompute() {
   const opts = readInputs();
-  if (opts.principal <= 0 || opts.months <= 0) return;
+
+  // A blank/invalid/0 interest rate would silently model a 0% loan (all interest = 0),
+  // which is almost never intended. Flag it instead of showing misleading results.
+  const rateRaw = document.getElementById("rate").value.trim();
+  const rateMissing = rateRaw === "" || !(opts.annualRate > 0);
+  document.getElementById("rateWarn").style.display =
+    (opts.principal > 0 && rateMissing) ? "block" : "none";
+  document.querySelector("#rate").closest(".input-wrap")
+    .classList.toggle("invalid", opts.principal > 0 && rateMissing);
+
+  if (opts.principal <= 0 || opts.months <= 0 || rateMissing) { resetResults(); return; }
 
   // baseline = the standard loan: starting rate, natural EMI, no prepayments, no revisions
   const base = simulate({

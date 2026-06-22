@@ -89,6 +89,9 @@ body {
 .inputs hr { border: none; border-top: 1px solid var(--line); margin: 20px 0 14px; }
 .hint { color: var(--muted); font-size: .82rem; margin: -4px 0 14px; }
 .hint.tiny { font-size: .76rem; margin-top: 6px; }
+.field-warn { display: none; margin-top: 7px; color: var(--warn); font-size: .77rem; line-height: 1.45; }
+.field-warn b { color: #fff; }
+.input-wrap.invalid { border-color: var(--warn); box-shadow: 0 0 0 3px rgba(251, 191, 36, .15); }
 .muted { color: var(--muted); font-weight: 400; }
 
 /* ---------- fields ---------- */
