@@ -6,6 +6,23 @@ with interactive charts. Nothing you type ever leaves your browser.
 
 🔗 **Live:** https://sabujghosh.github.io/loanlens/
 
+## Why this exists
+
+Most online loan calculators — including the ones banks provide — fall short in two
+frustrating ways: they **demand a lot of personal information** (logins, phone numbers,
+email, sometimes ID) just to run a few numbers, and they **leave out the adjustments
+that actually matter** when you're managing a real loan.
+
+LoanLens is the opposite by design:
+
+- **Nothing personal, ever.** It runs entirely in your browser — no account, no tracking,
+  no server. Your figures never leave the page. Save and reload scenarios as a local file
+  that only you hold.
+- **All the levers, in one place.** Prepayments (reduce tenure *or* reduce EMI, lump sums,
+  monthly/yearly extra, step-up EMI), floating interest-rate revisions, an EMI fixed on a
+  higher *sanctioned* amount than you actually drew, true daily-reducing-balance interest,
+  and a full exportable schedule — the things bank tools usually skip.
+
 ## Features
 
 - **EMI & amortization** on a **daily reducing-balance** basis (actual days per month ÷ 365),
